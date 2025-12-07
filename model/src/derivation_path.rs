@@ -14,39 +14,39 @@ pub trait DerivationPath: Clone + Debug + Display + FromStr + Send + Sync + 'sta
     fn from_vec(path: &Vec<ChildIndex>) -> Result<Self, DerivationPathError>;
 }
 
-#[derive(Debug, Fail, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum DerivationPathError {
-    #[fail(display = "expected BIP32 path")]
+    #[error("expected BIP32 path")]
     ExpectedBIP32Path,
 
-    #[fail(display = "expected BIP44 path")]
+    #[error("expected BIP44 path")]
     ExpectedBIP44Path,
 
-    #[fail(display = "expected BIP49 path")]
+    #[error("expected BIP49 path")]
     ExpectedBIP49Path,
 
-    #[fail(display = "expected valid Ethereum derivation path")]
+    #[error("expected valid Ethereum derivation path")]
     ExpectedValidEthereumDerivationPath,
 
-    #[fail(display = "expected valid Tron derivation path")]
+    #[error("expected valid Tron derivation path")]
     ExpectedValidTronDerivationPath,
 
-    #[fail(display = "expected ZIP32 path")]
+    #[error("expected ZIP32 path")]
     ExpectedZIP32Path,
 
-    #[fail(display = "expected hardened path")]
+    #[error("expected hardened path")]
     ExpectedHardenedPath,
 
-    #[fail(display = "expected normal path")]
+    #[error("expected normal path")]
     ExpectedNormalPath,
 
-    #[fail(display = "invalid child number: {}", _0)]
+    #[error("invalid child number: {0}")]
     InvalidChildNumber(u32),
 
-    #[fail(display = "invalid child number format")]
+    #[error("invalid child number format")]
     InvalidChildNumberFormat,
 
-    #[fail(display = "invalid derivation path: {}", _0)]
+    #[error("invalid derivation path: {0}")]
     InvalidDerivationPath(String),
 }
 

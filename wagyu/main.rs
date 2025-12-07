@@ -2,9 +2,7 @@
 //!
 //! A command-line tool to generate cryptocurrency wallets.
 
-use wagyu::cli::{
-    bitcoin::BitcoinCLI, ethereum::EthereumCLI, monero::MoneroCLI, tron::TronCLI, zcash::ZcashCLI, CLIError, CLI,
-};
+use wagyu::cli::{bitcoin::BitcoinCLI, ethereum::EthereumCLI, monero::MoneroCLI, tron::TronCLI, CLIError, CLI};
 
 use clap::{App, AppSettings};
 
@@ -12,7 +10,7 @@ use clap::{App, AppSettings};
 fn main() -> Result<(), CLIError> {
     let arguments = App::new("wagyu")
         .version("v0.6.3")
-        .about("Generate a wallet for Bitcoin, Ethereum, Monero, and Zcash")
+        .about("Generate a wallet for Bitcoin, Ethereum, Monero, and Tron")
         .author("Aleo <hello@aleo.org>")
         .settings(&[
             AppSettings::ColoredHelp,
@@ -25,7 +23,6 @@ fn main() -> Result<(), CLIError> {
             EthereumCLI::new(),
             MoneroCLI::new(),
             TronCLI::new(),
-            ZcashCLI::new(),
         ])
         .set_term_width(0)
         .get_matches();
@@ -35,7 +32,6 @@ fn main() -> Result<(), CLIError> {
         ("ethereum", Some(arguments)) => EthereumCLI::print(EthereumCLI::parse(arguments)?),
         ("monero", Some(arguments)) => MoneroCLI::print(MoneroCLI::parse(arguments)?),
         ("tron", Some(arguments)) => TronCLI::print(TronCLI::parse(arguments)?),
-        ("zcash", Some(arguments)) => ZcashCLI::print(ZcashCLI::parse(arguments)?),
         _ => unreachable!(),
     }
 }

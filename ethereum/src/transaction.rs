@@ -8,9 +8,9 @@ use wagyu_model::{PrivateKey, PublicKey, Transaction, TransactionError, Transact
 
 use core::{fmt, marker::PhantomData, str::FromStr};
 use ethereum_types::U256;
+use libsecp256k1 as secp256k1;
 use rlp::{decode_list, RlpStream};
-use secp256k1;
-use tiny_keccak::keccak256;
+use tiny_keccak::{Hasher, Keccak};
 
 pub fn to_bytes(value: u32) -> Result<Vec<u8>, TransactionError> {
     match value {
@@ -189,7 +189,7 @@ impl<N: EthereumNetwork> Transaction for EthereumTransaction<N> {
                 let message = secp256k1::Message::parse_slice(&raw_transaction.to_transaction_id()?.txid)?;
                 let public_key = EthereumPublicKey::from_secp256k1_public_key(secp256k1::recover(
                     &message,
-                    &secp256k1::Signature::parse_slice(signature.as_slice())?,
+                    &secp256k1::Signature::parse_standard_slice(signature.as_slice())?,
                     &recovery_id,
                 )?);
 
@@ -253,16 +253,20 @@ impl<N: EthereumNetwork> Transaction for EthereumTransaction<N> {
         }
 
         match &self.signature {
-            Some(signature) => Ok(signed_transaction(&self.parameters, signature)?.out()),
-            None => Ok(raw_transaction::<N>(&self.parameters)?.out()),
+            Some(signature) => Ok(signed_transaction(&self.parameters, signature)?.out().to_vec()),
+            None => Ok(raw_transaction::<N>(&self.parameters)?.out().to_vec()),
         }
     }
 
     /// Returns the hash of the signed transaction, if the signature is present.
     /// Otherwise, returns the hash of the raw transaction.
     fn to_transaction_id(&self) -> Result<Self::TransactionId, TransactionError> {
+        let mut hash = [0u8; 32];
+        let mut keccak = Keccak::v256();
+        keccak.update(&self.to_transaction_bytes()?);
+        keccak.finalize(&mut hash);
         Ok(Self::TransactionId {
-            txid: keccak256(&self.to_transaction_bytes()?).iter().cloned().collect(),
+            txid: hash.iter().cloned().collect(),
         })
     }
 }

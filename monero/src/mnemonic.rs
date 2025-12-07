@@ -11,7 +11,7 @@ use wagyu_model::{
 };
 
 use core::{fmt, marker::PhantomData, str, str::FromStr};
-use crc::{crc32, Hasher32};
+use crc::{Crc, CRC_32_ISO_HDLC};
 use curve25519_dalek::scalar::Scalar;
 use rand::Rng;
 
@@ -165,9 +165,9 @@ impl<N: MoneroNetwork, W: MoneroWordlist> MoneroMnemonic<N, W> {
     fn checksum_word(phrase: &Vec<String>) -> String {
         let phrase_trimmed = phrase.iter().map(|word| W::to_trimmed(word)).collect::<Vec<String>>();
 
-        let mut digest = crc32::Digest::new(crc32::IEEE);
-        digest.write(phrase_trimmed.concat().as_bytes());
-        phrase[(digest.sum32() % phrase.len() as u32) as usize].clone()
+        let crc = Crc::<u32>::new(&CRC_32_ISO_HDLC);
+        let checksum = crc.checksum(phrase_trimmed.concat().as_bytes());
+        phrase[(checksum % phrase.len() as u32) as usize].clone()
     }
 }
 

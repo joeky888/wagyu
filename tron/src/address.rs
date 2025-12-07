@@ -1,19 +1,19 @@
-use crate::{TronNetwork, format::TronFormat};
 use crate::private_key::TronPrivateKey;
 use crate::public_key::TronPublicKey;
-use base58::ToBase58;
+use crate::{format::TronFormat, TronNetwork};
 use base58::FromBase58;
-use wagyu_model::{Address, AddressError, PrivateKey, crypto::checksum};
+use base58::ToBase58;
+use wagyu_model::{crypto::checksum, Address, AddressError, PrivateKey};
 
 // use regex::Regex;
 use serde::Serialize;
 use std::{convert::TryFrom, fmt, marker::PhantomData, str::FromStr};
-use tiny_keccak::keccak256;
+use tiny_keccak::{Hasher, Keccak};
 // use sha3::{Digest, Keccak256};
 
 /// Represents an Tron address
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Hash)]
-pub struct TronAddress<N: TronNetwork>{
+pub struct TronAddress<N: TronNetwork> {
     /// The Tron address
     address: String,
     /// PhantomData
@@ -46,7 +46,10 @@ impl<N: TronNetwork> TronAddress<N> {
         // let mut hasher = Keccak256::new();
         // hasher.update(&public_key);
         // let digest = hasher.finalize();
-        let digest = keccak256(public_key.as_slice());
+        let mut digest = [0u8; 32];
+        let mut keccak = Keccak::v256();
+        keccak.update(public_key.as_slice());
+        keccak.finalize(&mut digest);
 
         let mut address = [0u8; 25];
         address[0] = N::address_prefix();
@@ -60,7 +63,10 @@ impl<N: TronNetwork> TronAddress<N> {
         // println!("address:{:?}", address);
         // println!("address_58: {}", address.to_base58());
 
-        TronAddress{address: address.to_base58(), _network: PhantomData}
+        TronAddress {
+            address: address.to_base58(),
+            _network: PhantomData,
+        }
     }
 }
 
@@ -86,7 +92,10 @@ impl<N: TronNetwork> FromStr for TronAddress<N> {
             return Err(AddressError::InvalidPrefix(address_decoded));
         }
 
-        Ok(Self{address: address.to_string(),_network: PhantomData,})
+        Ok(Self {
+            address: address.to_string(),
+            _network: PhantomData,
+        })
     }
 }
 
@@ -130,7 +139,7 @@ mod tests {
     }
 
     mod checksum_address {
-        use crate::{Mainnet};
+        use crate::Mainnet;
 
         use super::*;
         type N = Mainnet;
@@ -194,7 +203,7 @@ mod tests {
     #[test]
     fn test_checksum_address_invalid() {
         // Mismatched keypair
-        use crate::{Mainnet};
+        use crate::Mainnet;
         type N = Mainnet;
 
         let private_key = "f89f23eaeac18252fedf81bb8318d3c111d48c19b0680dcf6e0a8d5136caf287";

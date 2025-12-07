@@ -1,10 +1,10 @@
-use crate::{TronNetwork, address::TronAddress};
 use crate::format::TronFormat;
 use crate::public_key::TronPublicKey;
+use crate::{address::TronAddress, TronNetwork};
 use wagyu_model::{Address, AddressError, PrivateKey, PrivateKeyError, PublicKey};
 
+use libsecp256k1 as secp256k1;
 use rand::Rng;
-use secp256k1;
 use std::{fmt, fmt::Display, marker::PhantomData, str::FromStr};
 
 /// Represents an Tron private key
@@ -26,7 +26,10 @@ impl<N: TronNetwork> PrivateKey for TronPrivateKey<N> {
 
     /// Returns a randomly-generated Tron private key.
     fn new<R: Rng>(rng: &mut R) -> Result<Self, PrivateKeyError> {
-        Ok(Self{secret_key: secp256k1::SecretKey::random(rng),_network: PhantomData})
+        Ok(Self {
+            secret_key: secp256k1::SecretKey::random(rng),
+            _network: PhantomData,
+        })
     }
 
     /// Returns the public key of the corresponding Tron private key.
@@ -43,7 +46,10 @@ impl<N: TronNetwork> PrivateKey for TronPrivateKey<N> {
 impl<N: TronNetwork> TronPrivateKey<N> {
     /// Returns a private key given a secp256k1 secret key.
     pub fn from_secp256k1_secret_key(secret_key: &secp256k1::SecretKey) -> Self {
-        Self{secret_key: secret_key.clone(), _network: PhantomData}
+        Self {
+            secret_key: secret_key.clone(),
+            _network: PhantomData,
+        }
     }
 
     /// Returns the secp256k1 secret key of the private key.
@@ -61,7 +67,10 @@ impl<N: TronNetwork> FromStr for TronPrivateKey<N> {
         }
 
         let secret_key = hex::decode(private_key)?;
-        Ok(Self{secret_key: secp256k1::SecretKey::parse_slice(&secret_key)?,_network: PhantomData})
+        Ok(Self {
+            secret_key: secp256k1::SecretKey::parse_slice(&secret_key)?,
+            _network: PhantomData,
+        })
     }
 }
 
@@ -76,13 +85,10 @@ impl<N: TronNetwork> Display for TronPrivateKey<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Mainnet};
+    use crate::Mainnet;
     type N = Mainnet;
 
-    fn test_to_public_key<N: TronNetwork>(
-        expected_public_key: &TronPublicKey<N>,
-        private_key: &TronPrivateKey<N>,
-    ) {
+    fn test_to_public_key<N: TronNetwork>(expected_public_key: &TronPublicKey<N>, private_key: &TronPrivateKey<N>) {
         let public_key = private_key.to_public_key();
         assert_eq!(*expected_public_key, public_key);
     }

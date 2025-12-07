@@ -5,7 +5,7 @@ use crate::private_key::BitcoinPrivateKey;
 use wagyu_model::{Address, AddressError, PublicKey, PublicKeyError};
 
 use core::{fmt, fmt::Display, marker::PhantomData, str::FromStr};
-use secp256k1;
+use libsecp256k1 as secp256k1;
 
 /// Represents a Bitcoin public key
 #[derive(Debug, Clone, PartialEq, Eq)]

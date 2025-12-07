@@ -6,8 +6,8 @@ use wagyu_model::{crypto::checksum, Address, AddressError, PrivateKey, PrivateKe
 
 use base58::{FromBase58, ToBase58};
 use core::{fmt, fmt::Display, marker::PhantomData, str::FromStr};
+use libsecp256k1 as secp256k1;
 use rand::Rng;
-use secp256k1;
 
 /// Represents a Bitcoin private key
 #[derive(Debug, Clone, PartialEq, Eq)]

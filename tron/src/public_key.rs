@@ -1,9 +1,9 @@
-use crate::{TronNetwork, address::TronAddress};
 use crate::format::TronFormat;
 use crate::private_key::TronPrivateKey;
+use crate::{address::TronAddress, TronNetwork};
 use wagyu_model::{Address, AddressError, PublicKey, PublicKeyError};
 
-use secp256k1;
+use libsecp256k1 as secp256k1;
 use std::{fmt, fmt::Display, marker::PhantomData, str::FromStr};
 
 /// Represents an Tron public key
@@ -22,7 +22,10 @@ impl<N: TronNetwork> PublicKey for TronPublicKey<N> {
 
     /// Returns the address corresponding to the given public key.
     fn from_private_key(private_key: &Self::PrivateKey) -> Self {
-        Self{public_key: secp256k1::PublicKey::from_secret_key(&private_key.to_secp256k1_secret_key()), _network: PhantomData}
+        Self {
+            public_key: secp256k1::PublicKey::from_secret_key(&private_key.to_secp256k1_secret_key()),
+            _network: PhantomData,
+        }
     }
 
     /// Returns the address of the corresponding private key.
@@ -34,7 +37,10 @@ impl<N: TronNetwork> PublicKey for TronPublicKey<N> {
 impl<N: TronNetwork> TronPublicKey<N> {
     /// Returns a public key given a secp256k1 public key.
     pub fn from_secp256k1_public_key(public_key: secp256k1::PublicKey) -> Self {
-        Self{public_key: public_key, _network: PhantomData}
+        Self {
+            public_key,
+            _network: PhantomData,
+        }
     }
 
     /// Returns the secp256k1 public key of the public key
@@ -76,10 +82,7 @@ impl<N: TronNetwork> Display for TronPublicKey<N> {
 mod tests {
     use super::*;
 
-    fn test_from_private_key<N: TronNetwork>(
-        expected_public_key: &TronPublicKey<N>,
-        private_key: &TronPrivateKey<N>,
-    ) {
+    fn test_from_private_key<N: TronNetwork>(expected_public_key: &TronPublicKey<N>, private_key: &TronPrivateKey<N>) {
         let public_key = TronPublicKey::from_private_key(private_key);
         assert_eq!(*expected_public_key, public_key);
     }

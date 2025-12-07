@@ -4,8 +4,8 @@ use crate::public_key::EthereumPublicKey;
 use wagyu_model::{Address, AddressError, PrivateKey, PrivateKeyError, PublicKey};
 
 use core::{fmt, fmt::Display, str::FromStr};
+use libsecp256k1 as secp256k1;
 use rand::Rng;
-use secp256k1;
 
 /// Represents an Ethereum private key
 #[derive(Debug, Clone, PartialEq, Eq)]

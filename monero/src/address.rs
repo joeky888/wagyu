@@ -7,7 +7,7 @@ use wagyu_model::{Address, AddressError, PrivateKey};
 
 use base58_monero as base58;
 use core::{convert::TryFrom, fmt, marker::PhantomData, str::FromStr};
-use tiny_keccak::keccak256;
+use tiny_keccak::{Hasher, Keccak};
 
 /// Represents a Monero address
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -95,7 +95,10 @@ impl<N: MoneroNetwork> MoneroAddress<N> {
             }
         };
 
-        let checksum = &keccak256(checksum_bytes);
+        let mut checksum = [0u8; 32];
+        let mut keccak = Keccak::v256();
+        keccak.update(checksum_bytes);
+        keccak.finalize(&mut checksum);
         bytes.extend_from_slice(&checksum[0..4]);
 
         let address = base58::encode(bytes.as_slice())?;
@@ -162,7 +165,10 @@ impl<N: MoneroNetwork> FromStr for MoneroAddress<N> {
             MoneroFormat::Integrated(_) => (&bytes[0..73], &bytes[73..77]),
         };
 
-        let verify_checksum = &keccak256(checksum_bytes);
+        let mut verify_checksum = [0u8; 32];
+        let mut keccak = Keccak::v256();
+        keccak.update(checksum_bytes);
+        keccak.finalize(&mut verify_checksum);
         if &verify_checksum[0..4] != checksum {
             let expected = base58::encode(&verify_checksum[0..4])?;
             let found = base58::encode(checksum)?;

@@ -8,8 +8,8 @@ use crate::public_key::TronPublicKey;
 use wagyu_model::{PrivateKey, PublicKey, Transaction, TransactionError, TransactionId};
 
 use ethereum_types::U256;
+use libsecp256k1 as secp256k1;
 use rlp::{decode_list, RlpStream};
-use secp256k1;
 use std::{fmt, marker::PhantomData, str::FromStr};
 // use tiny_keccak::keccak256;
 use sha2::{Digest, Sha256};
@@ -190,9 +190,11 @@ impl<N: TronNetwork> Transaction for TronTransaction<N> {
                     _network: PhantomData,
                 };
                 let message = secp256k1::Message::parse_slice(&raw_transaction.to_transaction_id()?.txid)?;
-                let public_key = TronPublicKey::from_secp256k1_public_key(
-                    secp256k1::recover(&message, &secp256k1::Signature::parse_slice(signature.as_slice())?, &recovery_id)?,
-                );
+                let public_key = TronPublicKey::from_secp256k1_public_key(secp256k1::recover(
+                    &message,
+                    &secp256k1::Signature::parse_standard_slice(signature.as_slice())?,
+                    &recovery_id,
+                )?);
 
                 Ok(Self {
                     sender: Some(public_key.to_address(&TronFormat::Standard)?),
@@ -255,8 +257,8 @@ impl<N: TronNetwork> Transaction for TronTransaction<N> {
         }
 
         match &self.signature {
-            Some(signature) => Ok(signed_transaction(&self.parameters, signature)?.out()),
-            None => Ok(raw_transaction::<N>(&self.parameters)?.out()),
+            Some(signature) => Ok(signed_transaction(&self.parameters, signature)?.out().to_vec()),
+            None => Ok(raw_transaction::<N>(&self.parameters)?.out().to_vec()),
         }
     }
 
@@ -294,7 +296,7 @@ impl<N: TronNetwork> fmt::Display for TronTransaction<N> {
 mod tests {
     use super::*;
     use crate::network::TronNetwork;
-    use crate::{Mainnet};
+    use crate::Mainnet;
     // use crate::{Mainnet, Testnet};
     use wagyu_model::{PrivateKey, Transaction};
 

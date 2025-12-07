@@ -9,9 +9,9 @@ use wagyu_model::no_std::{io::Read, *};
 use wagyu_model::{PrivateKey, Transaction, TransactionError, TransactionId};
 
 use base58::FromBase58;
-use bech32::{Bech32, FromBase32};
+use bech32::FromBase32;
 use core::{fmt, str::FromStr};
-use secp256k1;
+use libsecp256k1 as secp256k1;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -107,8 +107,8 @@ pub fn create_script_pub_key<N: BitcoinNetwork>(address: &BitcoinAddress<N>) -> 
             Ok(script)
         }
         BitcoinFormat::P2WSH => {
-            let bech32 = Bech32::from_str(&address.to_string())?;
-            let (v, script) = bech32.data().split_at(1);
+            let (_hrp, data, _variant) = bech32::decode(&address.to_string())?;
+            let (v, script) = data.split_at(1);
             let script = Vec::from_base32(script)?;
             let mut script_bytes = vec![v[0].to_u8(), script.len() as u8];
             script_bytes.extend(script);
@@ -126,8 +126,8 @@ pub fn create_script_pub_key<N: BitcoinNetwork>(address: &BitcoinAddress<N>) -> 
             Ok(script)
         }
         BitcoinFormat::Bech32 => {
-            let bech32 = Bech32::from_str(&address.to_string())?;
-            let (v, program) = bech32.data().split_at(1);
+            let (_hrp, data, _variant) = bech32::decode(&address.to_string())?;
+            let (v, program) = data.split_at(1);
             let program = Vec::from_base32(program)?;
             let mut program_bytes = vec![v[0].to_u8(), program.len() as u8];
             program_bytes.extend(program);
