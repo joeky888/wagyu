@@ -91,7 +91,7 @@ impl TronWallet {
         password: Option<&str>,
         path: &str,
     ) -> Result<Self, CLIError> {
-        let mnemonic = TronMnemonic::<N, W>::from_phrase(&mnemonic)?;
+        let mnemonic = TronMnemonic::<N, W>::from_phrase(mnemonic)?;
         let master_extended_private_key = mnemonic.to_extended_private_key(password)?;
         let derivation_path = TronDerivationPath::from_str(path)?;
         let extended_private_key = master_extended_private_key.derive(&derivation_path)?;
@@ -119,7 +119,7 @@ impl TronWallet {
     ) -> Result<Self, CLIError> {
         let mut extended_private_key = TronExtendedPrivateKey::<N>::from_str(extended_private_key)?;
         if let Some(derivation_path) = path {
-            let derivation_path = TronDerivationPath::from_str(&derivation_path)?;
+            let derivation_path = TronDerivationPath::from_str(derivation_path)?;
             extended_private_key = extended_private_key.derive(&derivation_path)?;
         }
         let extended_public_key = extended_private_key.to_extended_public_key();
@@ -144,7 +144,7 @@ impl TronWallet {
     ) -> Result<Self, CLIError> {
         let mut extended_public_key = TronExtendedPublicKey::<N>::from_str(extended_public_key)?;
         if let Some(derivation_path) = path {
-            let derivation_path = TronDerivationPath::from_str(&derivation_path)?;
+            let derivation_path = TronDerivationPath::from_str(derivation_path)?;
             extended_public_key = extended_public_key.derive(&derivation_path)?;
         }
         let public_key = extended_public_key.to_public_key();
@@ -665,9 +665,9 @@ impl CLI for TronCLI {
     #[cfg_attr(tarpaulin, skip)]
     fn print(options: Self::Options) -> Result<(), CLIError> {
         fn output<N: TronNetwork, W: TronWordlist>(options: TronOptions) -> Result<(), CLIError> {
-            let wallets = match options.subcommand.as_ref().map(String::as_str) {
+            let wallets = match options.subcommand.as_deref() {
                 Some("hd") => {
-                    let password = options.password.as_ref().map(String::as_str);
+                    let password = options.password.as_deref();
                     (0..options.count)
                         .flat_map(|_| {
                             // Sample a new HD wallet
@@ -721,7 +721,7 @@ impl CLI for TronCLI {
                         ) -> Result<Vec<TronWallet>, CLIError> {
                             // Generate the mnemonic wallets, from `index` to a number of specified `indices`
                             let mut wallets = vec![];
-                            let password = options.password.as_ref().map(String::as_str);
+                            let password = options.password.as_deref();
                             for path in options.to_derivation_paths(true) {
                                 wallets.push(TronWallet::from_mnemonic::<EN, EW>(mnemonic, password, path.as_ref().unwrap())?);
                             }

@@ -34,7 +34,7 @@ pub trait CLI {
             .collect::<Vec<Arg<'static, 'static>>>();
         let options = &Self::OPTIONS
             .iter()
-            .map(|a| match a.2.len() > 0 {
+            .map(|a| match !a.2.is_empty() {
                 true => Arg::from_usage(a.0)
                     .conflicts_with_all(a.1)
                     .possible_values(a.2)
@@ -49,7 +49,7 @@ pub trait CLI {
                     .about(s.1)
                     .args(
                         &s.2.iter()
-                            .map(|a| match a.2.len() > 0 {
+                            .map(|a| match !a.2.is_empty() {
                                 true => Arg::from_usage(a.0)
                                     .conflicts_with_all(a.1)
                                     .possible_values(a.2)
