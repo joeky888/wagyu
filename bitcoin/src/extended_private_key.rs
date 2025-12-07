@@ -47,7 +47,7 @@ impl<N: BitcoinNetwork> ExtendedPrivateKey for BitcoinExtendedPrivateKey<N> {
 
     /// Returns a new Bitcoin extended private key.
     fn new(seed: &[u8], format: &Self::Format, path: &Self::DerivationPath) -> Result<Self, ExtendedPrivateKeyError> {
-        Ok(Self::new_master(seed, format)?.derive(path)?)
+        Self::new_master(seed, format)?.derive(path)
     }
 
     /// Returns a new Bitcoin extended private key.
@@ -129,7 +129,7 @@ impl<N: BitcoinNetwork> ExtendedPrivateKey for BitcoinExtendedPrivateKey<N> {
 
     /// Returns the extended public key of the corresponding extended private key.
     fn to_extended_public_key(&self) -> Self::ExtendedPublicKey {
-        Self::ExtendedPublicKey::from_extended_private_key(&self)
+        Self::ExtendedPublicKey::from_extended_private_key(self)
     }
 
     /// Returns the private key of the corresponding extended private key.
@@ -216,7 +216,7 @@ impl<N: BitcoinNetwork> Display for BitcoinExtendedPrivateKey<N> {
         result[46..78].copy_from_slice(&self.private_key.to_secp256k1_secret_key().serialize());
 
         let checksum = &checksum(&result[0..78])[0..4];
-        result[78..82].copy_from_slice(&checksum);
+        result[78..82].copy_from_slice(checksum);
 
         fmt.write_str(&result.to_base58())
     }

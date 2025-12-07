@@ -133,7 +133,7 @@ impl<N: MoneroNetwork> MoneroPrivateKey<N> {
 
     /// Returns the format of the Monero address.
     pub fn format(&self) -> MoneroFormat {
-        self.format.clone()
+        self.format
     }
 }
 

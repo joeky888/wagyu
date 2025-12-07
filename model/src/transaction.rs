@@ -31,7 +31,7 @@ pub trait Transaction: Clone + Send + Sync + 'static {
     fn sign(&self, private_key: &Self::PrivateKey) -> Result<Self, TransactionError>;
 
     /// Returns a transaction given the transaction bytes.
-    fn from_transaction_bytes(transaction: &Vec<u8>) -> Result<Self, TransactionError>;
+    fn from_transaction_bytes(transaction: &[u8]) -> Result<Self, TransactionError>;
 
     /// Returns the transaction in bytes.
     fn to_transaction_bytes(&self) -> Result<Vec<u8>, TransactionError>;

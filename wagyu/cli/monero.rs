@@ -60,7 +60,6 @@ impl MoneroWallet {
             format: Some(format.to_string()),
             payment_id: address.to_payment_id(),
             network: Some(N::NAME.to_string()),
-            ..Default::default()
         })
     }
 
@@ -86,7 +85,6 @@ impl MoneroWallet {
             format: Some(format.to_string()),
             payment_id: address.to_payment_id(),
             network: Some(N::NAME.to_string()),
-            ..Default::default()
         })
     }
 

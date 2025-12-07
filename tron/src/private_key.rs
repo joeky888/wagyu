@@ -47,14 +47,14 @@ impl<N: TronNetwork> TronPrivateKey<N> {
     /// Returns a private key given a secp256k1 secret key.
     pub fn from_secp256k1_secret_key(secret_key: &secp256k1::SecretKey) -> Self {
         Self {
-            secret_key: secret_key.clone(),
+            secret_key: *secret_key,
             _network: PhantomData,
         }
     }
 
     /// Returns the secp256k1 secret key of the private key.
     pub fn to_secp256k1_secret_key(&self) -> secp256k1::SecretKey {
-        self.secret_key.clone()
+        self.secret_key
     }
 }
 

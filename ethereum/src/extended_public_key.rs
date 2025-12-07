@@ -124,11 +124,11 @@ impl<N: EthereumNetwork> FromStr for EthereumExtendedPublicKey<N> {
             return Err(ExtendedPublicKeyError::InvalidByteLength(data.len()));
         }
 
-        if &data[0..4] != [0x04u8, 0x88, 0xB2, 0x1E] {
+        if data[0..4] != [0x04u8, 0x88, 0xB2, 0x1E] {
             return Err(ExtendedPublicKeyError::InvalidVersionBytes(data[0..4].to_vec()));
         };
 
-        let depth = data[4] as u8;
+        let depth = data[4];
 
         let mut parent_fingerprint = [0u8; 4];
         parent_fingerprint.copy_from_slice(&data[5..9]);
@@ -167,7 +167,7 @@ impl<N: EthereumNetwork> fmt::Display for EthereumExtendedPublicKey<N> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let mut result = [0u8; 82];
         result[0..4].copy_from_slice(&[0x04u8, 0x88, 0xB2, 0x1E][..]);
-        result[4] = self.depth as u8;
+        result[4] = self.depth;
         result[5..9].copy_from_slice(&self.parent_fingerprint[..]);
         result[9..13].copy_from_slice(&u32::from(self.child_index).to_be_bytes());
         result[13..45].copy_from_slice(&self.chain_code[..]);

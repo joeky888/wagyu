@@ -53,7 +53,7 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
     /// Returns one time key given recipient public keys, randomness, and output index
     pub fn new(public: &MoneroPublicKey<N>, rand: &[u8; 32], index: u64) -> Result<OneTimeKey<N>, OneTimeKeyError> {
         //destination_key = hash((random * public_view_key) || index) * generator + public_spend_key
-        const G: &EdwardsBasepointTable = &ED25519_BASEPOINT_TABLE;
+        const G: &EdwardsBasepointTable = ED25519_BASEPOINT_TABLE;
 
         let public_spend_key: [u8; 32] = match public.to_public_spend_key() {
             Some(key) => key,
@@ -73,9 +73,9 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
         };
         let mut concat = Vec::<u8>::new();
 
-        Self::generate_key_derivation(&public_view_key, &rand, &mut concat)?;
+        Self::generate_key_derivation(&public_view_key, rand, &mut concat)?;
 
-        let hash = &Self::derivation_to_scalar(&mut concat, index);
+        let hash = &Self::derivation_to_scalar(&concat, index);
         let key: EdwardsPoint = hash * G + public_spend_point;
 
         let tx = &Scalar::from_bytes_mod_order(*rand) * G;
@@ -98,7 +98,7 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
             &mut concat,
         )?;
 
-        let hash = Self::derivation_to_scalar(&mut concat, index);
+        let hash = Self::derivation_to_scalar(&concat, index);
         let private_spend_scalar = Scalar::from_bytes_mod_order(private.to_private_spend_key());
         let x: Scalar = hash + private_spend_scalar;
 
@@ -108,7 +108,7 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
     /// Returns one time public destination key given recipient private keys for verification
     fn to_public(&self, private: &MoneroPrivateKey<N>, index: u64) -> Result<[u8; 32], OneTimeKeyError> {
         //destination_key = one_time_private_key * G
-        const G: &EdwardsBasepointTable = &ED25519_BASEPOINT_TABLE;
+        const G: &EdwardsBasepointTable = ED25519_BASEPOINT_TABLE;
         let one_time_private_key = self.to_private(private, index)?;
         let destination_key = &Scalar::from_bytes_mod_order(one_time_private_key) * G;
 
@@ -130,7 +130,7 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
         let mut n = index;
         loop {
             let bits = (n & 0b0111_1111) as u8;
-            n = n >> 7;
+            n >>= 7;
             res.push(bits);
             if n == 0u64 {
                 break;
@@ -174,9 +174,9 @@ impl<N: MoneroNetwork> OneTimeKey<N> {
     }
 
     /// Returns keccak256 hash of key derivation extended by output index as a scalar
-    fn derivation_to_scalar(derivation: &Vec<u8>, output_index: u64) -> Scalar {
+    fn derivation_to_scalar(derivation: &[u8], output_index: u64) -> Scalar {
         // H_s(derivation || output_index)
-        let mut derivation = derivation.clone();
+        let mut derivation = derivation.to_owned();
         derivation.extend(&Self::encode_varint(output_index));
 
         let mut hash = [0u8; 32];

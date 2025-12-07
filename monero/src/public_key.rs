@@ -27,7 +27,7 @@ impl<N: MoneroNetwork> PublicKey for MoneroPublicKey<N> {
 
     /// Returns the address corresponding to the given public key.
     fn from_private_key(private_key: &Self::PrivateKey) -> Self {
-        const G: &EdwardsBasepointTable = &ED25519_BASEPOINT_TABLE;
+        const G: &EdwardsBasepointTable = ED25519_BASEPOINT_TABLE;
 
         match private_key.format() {
             MoneroFormat::Subaddress(major, minor) if major != 0 || minor != 0 => {
@@ -141,7 +141,7 @@ impl<N: MoneroNetwork> MoneroPublicKey<N> {
 
     /// Returns the format of the Monero address.
     pub fn format(&self) -> MoneroFormat {
-        self.format.clone()
+        self.format
     }
 }
 
@@ -159,11 +159,11 @@ impl<N: MoneroNetwork> FromStr for MoneroPublicKey<N> {
         let public_spend_key = hex::encode(spend_key);
         let public_view_key = hex::encode(view_key);
 
-        Ok(Self::from(
+        Self::from(
             public_spend_key.as_str(),
             public_view_key.as_str(),
             &MoneroFormat::Standard,
-        )?)
+        )
     }
 }
 

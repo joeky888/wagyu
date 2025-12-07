@@ -50,7 +50,7 @@ impl<N: BitcoinNetwork> BitcoinPublicKey<N> {
 
     /// Returns the secp256k1 public key of the public key.
     pub fn to_secp256k1_public_key(&self) -> secp256k1::PublicKey {
-        self.public_key.clone()
+        self.public_key
     }
 
     /// Returns `true` if the public key is in compressed form.

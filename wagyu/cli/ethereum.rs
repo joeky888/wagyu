@@ -692,7 +692,7 @@ impl CLI for EthereumCLI {
                 Some("import-hd") => {
                     if let Some(mnemonic) = options.mnemonic.clone() {
                         fn process_mnemonic<EN: EthereumNetwork, EW: EthereumWordlist>(
-                            mnemonic: &String,
+                            mnemonic: &str,
                             options: &EthereumOptions,
                         ) -> Result<Vec<EthereumWallet>, CLIError> {
                             // Generate the mnemonic wallets, from `index` to a number of specified `indices`

@@ -27,6 +27,7 @@ pub trait CLI {
     const SUBCOMMANDS: &'static [SubCommandType];
 
     #[cfg_attr(tarpaulin, skip)]
+    #[allow(clippy::new_ret_no_self)]
     fn new<'a, 'b>() -> App<'a, 'b> {
         let flags = &Self::FLAGS
             .iter()

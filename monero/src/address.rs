@@ -36,18 +36,16 @@ impl<N: MoneroNetwork> Address for MoneroAddress<N> {
             | (MoneroFormat::Subaddress(_, _), &MoneroFormat::Standard) => {
                 Self::from_public_key(&private_key.to_public_key(), format)
             }
-            _ => {
-                return Err(AddressError::IncompatibleFormats(
-                    private_key.format().to_string(),
-                    format.to_string(),
-                ))
-            }
+            _ => Err(AddressError::IncompatibleFormats(
+                private_key.format().to_string(),
+                format.to_string(),
+            )),
         }
     }
 
     /// Returns the address corresponding to the given Monero public key.
     fn from_public_key(public_key: &Self::PublicKey, format: &Self::Format) -> Result<Self, AddressError> {
-        Self::generate_address(&public_key, format)
+        Self::generate_address(public_key, format)
     }
 }
 
@@ -110,10 +108,8 @@ impl<N: MoneroNetwork> MoneroAddress<N> {
 
     /// Returns the payment ID of a Monero integrated address, or returns `None`.
     pub fn to_payment_id(&self) -> Option<String> {
-        if let Ok(format) = self.format() {
-            if let MoneroFormat::Integrated(payment_id) = format {
-                return Some(hex::encode(payment_id));
-            }
+        if let Ok(MoneroFormat::Integrated(payment_id)) = self.format() {
+            return Some(hex::encode(payment_id));
         }
         None
     }

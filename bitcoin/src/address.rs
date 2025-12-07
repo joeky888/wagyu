@@ -35,12 +35,10 @@ impl<N: BitcoinNetwork> Address for BitcoinAddress<N> {
         let public_key = private_key.to_public_key();
         match format {
             BitcoinFormat::P2PKH => Self::p2pkh(&public_key),
-            BitcoinFormat::P2WSH => {
-                return Err(AddressError::IncompatibleFormats(
-                    String::from("non-script"),
-                    String::from("p2wsh address"),
-                ))
-            }
+            BitcoinFormat::P2WSH => Err(AddressError::IncompatibleFormats(
+                String::from("non-script"),
+                String::from("p2wsh address"),
+            )),
             BitcoinFormat::P2SH_P2WPKH => Self::p2sh_p2wpkh(&public_key),
             BitcoinFormat::Bech32 => Self::bech32(&public_key),
         }
@@ -50,12 +48,10 @@ impl<N: BitcoinNetwork> Address for BitcoinAddress<N> {
     fn from_public_key(public_key: &Self::PublicKey, format: &Self::Format) -> Result<Self, AddressError> {
         match format {
             BitcoinFormat::P2PKH => Self::p2pkh(public_key),
-            BitcoinFormat::P2WSH => {
-                return Err(AddressError::IncompatibleFormats(
-                    String::from("non-script"),
-                    String::from("p2wsh address"),
-                ))
-            }
+            BitcoinFormat::P2WSH => Err(AddressError::IncompatibleFormats(
+                String::from("non-script"),
+                String::from("p2wsh address"),
+            )),
             BitcoinFormat::P2SH_P2WPKH => Self::p2sh_p2wpkh(public_key),
             BitcoinFormat::Bech32 => Self::bech32(public_key),
         }
@@ -86,7 +82,7 @@ impl<N: BitcoinNetwork> BitcoinAddress<N> {
 
     // Returns a P2WSH address in Bech32 format from a given Bitcoin script
     pub fn p2wsh(original_script: &Vec<u8>) -> Result<Self, AddressError> {
-        let script = Sha256::digest(&original_script).to_vec();
+        let script = Sha256::digest(original_script).to_vec();
 
         // Organize as a hash
         let v = N::to_address_prefix(&BitcoinFormat::P2WSH)[0];
@@ -180,7 +176,7 @@ impl<N: BitcoinNetwork> FromStr for BitcoinAddress<N> {
 
         if let Ok(format) = BitcoinFormat::from_address_prefix(prefix.as_bytes()) {
             if BitcoinFormat::Bech32 == format {
-                let (_hrp, data, _variant) = bech32::decode(&address)?;
+                let (_hrp, data, _variant) = bech32::decode(address)?;
                 if data.is_empty() {
                     return Err(AddressError::InvalidAddress(address.to_owned()));
                 }

@@ -1,12 +1,12 @@
 use crate::cli::{flag, option, subcommand, types::*, CLIError, CLI};
-use crate::tron::{
-    wordlist::*, TronAddress, TronAmount, TronDerivationPath, TronExtendedPrivateKey,
-    TronExtendedPublicKey, TronFormat, TronMnemonic, TronNetwork, TronPrivateKey,
-    TronPublicKey, TronTransaction, TronTransactionParameters, Mainnet as TronMainnet, Testnet as TronTestnet,
-};
 use crate::model::{
     ExtendedPrivateKey, ExtendedPublicKey, Mnemonic, MnemonicCount, MnemonicExtended, Network, PrivateKey, PublicKey,
     Transaction,
+};
+use crate::tron::{
+    wordlist::*, Mainnet as TronMainnet, Testnet as TronTestnet, TronAddress, TronAmount, TronDerivationPath,
+    TronExtendedPrivateKey, TronExtendedPublicKey, TronFormat, TronMnemonic, TronNetwork, TronPrivateKey,
+    TronPublicKey, TronTransaction, TronTransactionParameters,
 };
 
 use clap::{ArgMatches, Values};
@@ -591,12 +591,14 @@ impl TronOptions {
         let start = self.index;
         let end = start + self.indices;
         let mut options = self.clone();
-        (start..end).map(|index| {
-            // Sets the index to the specified index
-            options.index(Some(index));
-            // Generates the derivation path for the specified information
-            options.to_derivation_path(default)
-        }).collect()
+        (start..end)
+            .map(|index| {
+                // Sets the index to the specified index
+                options.index(Some(index));
+                // Generates the derivation path for the specified information
+                options.to_derivation_path(default)
+            })
+            .collect()
     }
 }
 
@@ -626,7 +628,10 @@ impl CLI for TronCLI {
             ("hd", Some(arguments)) => {
                 options.subcommand = Some("hd".into());
                 options.parse(arguments, &["count", "json", "network"]);
-                options.parse(arguments, &["derivation", "index", "indices", "language", "password", "word count"]);
+                options.parse(
+                    arguments,
+                    &["derivation", "index", "indices", "language", "password", "word count"],
+                );
             }
             ("import", Some(arguments)) => {
                 options.subcommand = Some("import".into());
@@ -677,38 +682,43 @@ impl CLI for TronCLI {
                                 password,
                                 &options.to_derivation_path(true).unwrap(),
                             )
-                                .unwrap();
+                            .unwrap();
                             let mnemonic = &wallet.mnemonic.unwrap();
 
                             // Generate the HD wallet, from `index` to a number of specified `indices`
-                            options.to_derivation_paths(true).iter().flat_map(|path| {
-                                match TronWallet::from_mnemonic::<N, W>(mnemonic, password, path.as_ref().unwrap()) {
-                                    Ok(wallet) => vec![wallet],
-                                    _ => vec![],
-                                }
-                            })
-                            .collect::<Vec<TronWallet>>()
+                            options
+                                .to_derivation_paths(true)
+                                .iter()
+                                .flat_map(|path| {
+                                    match TronWallet::from_mnemonic::<N, W>(mnemonic, password, path.as_ref().unwrap())
+                                    {
+                                        Ok(wallet) => vec![wallet],
+                                        _ => vec![],
+                                    }
+                                })
+                                .collect::<Vec<TronWallet>>()
                         })
                         .collect()
                 }
                 Some("import") => {
                     if let Some(private_key) = options.private {
-                        vec![
-                                match options.network.as_str() {
-                                    TronTestnet::NAME => TronWallet::from_private_key::<TronTestnet>(&private_key),
-                                    _ => TronWallet::from_private_key::<TronMainnet>(&private_key),
-                                }?
-                            ]
+                        vec![match options.network.as_str() {
+                            TronTestnet::NAME => TronWallet::from_private_key::<TronTestnet>(&private_key),
+                            _ => TronWallet::from_private_key::<TronMainnet>(&private_key),
+                        }?]
                     } else if let Some(public_key) = options.public {
-                        vec![
-                            match options.network.as_str() {
-                                TronTestnet::NAME => TronWallet::from_public_key::<TronTestnet>(&public_key),
-                                _ => TronWallet::from_public_key::<TronMainnet>(&public_key),
-                            }?
-                        ]
+                        vec![match options.network.as_str() {
+                            TronTestnet::NAME => TronWallet::from_public_key::<TronTestnet>(&public_key),
+                            _ => TronWallet::from_public_key::<TronMainnet>(&public_key),
+                        }?]
                     } else if let Some(address) = options.address {
-                        vec![TronWallet::from_address::<TronMainnet>(&address)
-                                .or(TronWallet::from_address::<TronTestnet>(&address))?]
+                        vec![
+                            TronWallet::from_address::<TronMainnet>(&address).or(TronWallet::from_address::<
+                                TronTestnet,
+                            >(
+                                &address
+                            ))?,
+                        ]
                     } else {
                         vec![]
                     }
@@ -716,14 +726,18 @@ impl CLI for TronCLI {
                 Some("import-hd") => {
                     if let Some(mnemonic) = options.mnemonic.clone() {
                         fn process_mnemonic<EN: TronNetwork, EW: TronWordlist>(
-                            mnemonic: &String,
+                            mnemonic: &str,
                             options: &TronOptions,
                         ) -> Result<Vec<TronWallet>, CLIError> {
                             // Generate the mnemonic wallets, from `index` to a number of specified `indices`
                             let mut wallets = vec![];
                             let password = options.password.as_deref();
                             for path in options.to_derivation_paths(true) {
-                                wallets.push(TronWallet::from_mnemonic::<EN, EW>(mnemonic, password, path.as_ref().unwrap())?);
+                                wallets.push(TronWallet::from_mnemonic::<EN, EW>(
+                                    mnemonic,
+                                    password,
+                                    path.as_ref().unwrap(),
+                                )?);
                             }
                             Ok(wallets)
                         }
@@ -738,22 +752,28 @@ impl CLI for TronCLI {
                             .or(process_mnemonic::<N, Spanish>(&mnemonic, &options))?
                     } else if let Some(extended_private_key) = options.extended_private_key.clone() {
                         // Generate the extended private keys, from `index` to a number of specified `indices`
-                        options.to_derivation_paths(true).iter().flat_map(|path| {
-                            match TronWallet::from_extended_private_key::<N>(&extended_private_key, path) {
-                                Ok(wallet) => vec![wallet],
-                                _ => vec![],
-                            }
-                        })
-                        .collect::<Vec<TronWallet>>()
+                        options
+                            .to_derivation_paths(true)
+                            .iter()
+                            .flat_map(|path| {
+                                match TronWallet::from_extended_private_key::<N>(&extended_private_key, path) {
+                                    Ok(wallet) => vec![wallet],
+                                    _ => vec![],
+                                }
+                            })
+                            .collect::<Vec<TronWallet>>()
                     } else if let Some(extended_public_key) = options.extended_public_key.clone() {
                         // Generate the extended public keys, from `index` to a number of specified `indices`
-                        options.to_derivation_paths(true).iter().flat_map(|path| {
-                            match TronWallet::from_extended_public_key::<N>(&extended_public_key, path) {
-                                Ok(wallet) => vec![wallet],
-                                _ => vec![],
-                            }
-                        })
-                        .collect::<Vec<TronWallet>>()
+                        options
+                            .to_derivation_paths(true)
+                            .iter()
+                            .flat_map(|path| {
+                                match TronWallet::from_extended_public_key::<N>(&extended_public_key, path) {
+                                    Ok(wallet) => vec![wallet],
+                                    _ => vec![],
+                                }
+                            })
+                            .collect::<Vec<TronWallet>>()
                     } else {
                         vec![]
                     }
@@ -767,17 +787,14 @@ impl CLI for TronCLI {
                     } else if let (Some(transaction_hex), Some(transaction_private_key)) =
                         (options.transaction_hex.clone(), options.transaction_private_key.clone())
                     {
-
                         match options.network.as_str() {
-                            TronMainnet::NAME => vec![TronWallet::to_signed_transaction::<
-                                TronMainnet,
-                            >(
-                                transaction_hex, transaction_private_key
+                            TronMainnet::NAME => vec![TronWallet::to_signed_transaction::<TronMainnet>(
+                                transaction_hex,
+                                transaction_private_key,
                             )?],
-                            TronTestnet::NAME => vec![TronWallet::to_signed_transaction::<
-                                TronMainnet,
-                            >(
-                                transaction_hex, transaction_private_key
+                            TronTestnet::NAME => vec![TronWallet::to_signed_transaction::<TronMainnet>(
+                                transaction_hex,
+                                transaction_private_key,
                             )?],
                             _ => vec![TronWallet::to_signed_transaction::<TronMainnet>(
                                 transaction_hex,
@@ -808,39 +825,39 @@ impl CLI for TronCLI {
             "chinese_simplified" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, ChineseSimplified>(options),
                 _ => output::<TronMainnet, ChineseTraditional>(options),
-            }
+            },
             "chinese_traditional" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, ChineseTraditional>(options),
                 _ => output::<TronMainnet, ChineseTraditional>(options),
-            }
+            },
             "english" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, English>(options),
                 _ => output::<TronMainnet, English>(options),
-            }
+            },
             "french" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, French>(options),
                 _ => output::<TronMainnet, French>(options),
-            }
+            },
             "italian" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, Italian>(options),
                 _ => output::<TronMainnet, Italian>(options),
-            }
+            },
             "japanese" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, Japanese>(options),
                 _ => output::<TronMainnet, Japanese>(options),
-            }
+            },
             "korean" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, Korean>(options),
                 _ => output::<TronMainnet, Korean>(options),
-            }
+            },
             "spanish" => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, Spanish>(options),
                 _ => output::<TronMainnet, Spanish>(options),
-            }
+            },
             _ => match options.network.as_str() {
                 TronTestnet::NAME => output::<TronTestnet, English>(options),
                 _ => output::<TronMainnet, English>(options),
-            }
+            },
         }
     }
 }

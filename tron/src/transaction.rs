@@ -25,7 +25,7 @@ pub fn to_bytes(value: u32) -> Result<Vec<u8>, TransactionError> {
     }
 }
 
-pub fn from_bytes(value: &Vec<u8>) -> Result<u32, TransactionError> {
+pub fn from_bytes(value: &[u8]) -> Result<u32, TransactionError> {
     match value.len() {
         0 => Ok(0u32),
         1 => Ok(u32::from_le_bytes([value[0], 0, 0, 0])),
@@ -139,8 +139,8 @@ impl<N: TronNetwork> Transaction for TronTransaction<N> {
 
     /// Returns a transaction given the transaction bytes.
     /// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
-    fn from_transaction_bytes(transaction: &Vec<u8>) -> Result<Self, TransactionError> {
-        let list: Vec<Vec<u8>> = decode_list(&transaction);
+    fn from_transaction_bytes(transaction: &[u8]) -> Result<Self, TransactionError> {
+        let list: Vec<Vec<u8>> = decode_list(transaction);
         if list.len() != 9 {
             return Err(TransactionError::InvalidRlpLength(list.len()));
         }

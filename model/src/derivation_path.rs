@@ -11,7 +11,7 @@ pub trait DerivationPath: Clone + Debug + Display + FromStr + Send + Sync + 'sta
     fn to_vec(&self) -> Result<Vec<ChildIndex>, DerivationPathError>;
 
     /// Returns a derivation path given the child index vector.
-    fn from_vec(path: &Vec<ChildIndex>) -> Result<Self, DerivationPathError>;
+    fn from_vec(path: &[ChildIndex]) -> Result<Self, DerivationPathError>;
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -94,8 +94,8 @@ impl ChildIndex {
     /// Returns the child index.
     pub fn to_index(&self) -> u32 {
         match self {
-            &ChildIndex::Hardened(i) => i + (1 << 31),
-            &ChildIndex::Normal(i) => i,
+            ChildIndex::Hardened(i) => i + (1 << 31),
+            ChildIndex::Normal(i) => *i,
         }
     }
 }
@@ -123,7 +123,7 @@ impl FromStr for ChildIndex {
     type Err = DerivationPathError;
 
     fn from_str(inp: &str) -> Result<Self, Self::Err> {
-        Ok(match inp.chars().last().map_or(false, |l| l == '\'' || l == 'h') {
+        Ok(match inp.chars().last().is_some_and(|l| l == '\'' || l == 'h') {
             true => Self::hardened(
                 inp[0..inp.len() - 1]
                     .parse()

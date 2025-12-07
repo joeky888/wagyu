@@ -36,7 +36,7 @@ impl EthereumPublicKey {
 
     /// Returns the secp256k1 public key of the public key
     pub fn to_secp256k1_public_key(&self) -> secp256k1::PublicKey {
-        self.0.clone()
+        self.0
     }
 }
 

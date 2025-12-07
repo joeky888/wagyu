@@ -77,7 +77,7 @@ impl<N: MoneroNetwork, W: MoneroWordlist> Mnemonic for MoneroMnemonic<N, W> {
         }
 
         // Verify the checksum
-        let expected_checksum = Self::checksum_word(&phrase.into());
+        let expected_checksum = Self::checksum_word(&phrase);
         if W::to_trimmed(&expected_checksum) != W::to_trimmed(&checksum) {
             let expected = W::to_trimmed(&expected_checksum);
             let found = W::to_trimmed(&checksum);
@@ -130,7 +130,7 @@ impl<N: MoneroNetwork, W: MoneroWordlist> Mnemonic for MoneroMnemonic<N, W> {
     /// Returns the private key of the corresponding mnemonic.
     fn to_private_key(&self, _: Option<&str>) -> Result<Self::PrivateKey, MnemonicError> {
         Ok(MoneroPrivateKey::from_seed(
-            hex::encode(&self.seed).as_str(),
+            hex::encode(self.seed).as_str(),
             &MoneroFormat::Standard,
         )?)
     }
@@ -162,7 +162,7 @@ impl<N: MoneroNetwork, W: MoneroWordlist> MoneroMnemonic<N, W> {
     }
 
     /// Returns the checksum word for a given phrase.
-    fn checksum_word(phrase: &Vec<String>) -> String {
+    fn checksum_word(phrase: &[String]) -> String {
         let phrase_trimmed = phrase.iter().map(|word| W::to_trimmed(word)).collect::<Vec<String>>();
 
         let crc = Crc::<u32>::new(&CRC_32_ISO_HDLC);

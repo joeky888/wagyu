@@ -49,7 +49,7 @@ impl<N: BitcoinNetwork> BitcoinPrivateKey<N> {
     /// Returns a private key given a secp256k1 secret key.
     pub fn from_secp256k1_secret_key(secret_key: &secp256k1::SecretKey, compressed: bool) -> Self {
         Self {
-            secret_key: secret_key.clone(),
+            secret_key: *secret_key,
             compressed,
             _network: PhantomData,
         }
@@ -57,7 +57,7 @@ impl<N: BitcoinNetwork> BitcoinPrivateKey<N> {
 
     /// Returns the secp256k1 secret key of the private key.
     pub fn to_secp256k1_secret_key(&self) -> secp256k1::SecretKey {
-        self.secret_key.clone()
+        self.secret_key
     }
 
     /// Returns `true` if the private key is in compressed form.
